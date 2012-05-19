@@ -30,6 +30,24 @@ func (signMagLittleEndian) Uint64(b []byte) uint64 {
 	return uint64(y)
 }
 
-func (signMagLittleEndian) PutUint64(b []byte, v uint64) { panic("unimplemented") }
+func (signMagLittleEndian) PutUint64(b []byte, v uint64) {
+	x := int64(v)
+	neg := x < 0
+	if neg {
+		x = -x
+	}
+
+	b[0] = byte(x)
+	b[1] = byte(x >> 8)
+	b[2] = byte(x >> 16)
+	b[3] = byte(x >> 24)
+	b[4] = byte(x >> 32)
+	b[5] = byte(x >> 40)
+	b[6] = byte(x >> 48)
+	b[7] = byte(x >> 56)
+	if neg {
+		b[7] |= 0x80
+	}
+}
 
 func (signMagLittleEndian) String() string { return "signMagLittleEndian" }

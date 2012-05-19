@@ -1,6 +1,3 @@
-// Package binarydist implements binary patch as described on
-// http://www.daemonology.net/bsdiff/. It reads and writes files
-// compatible with the tools there.
 package binarydist
 
 import (
@@ -14,48 +11,29 @@ import (
 
 var ErrCorrupt = errors.New("corrupt patch")
 
-var magic = [8]byte{'B', 'S', 'D', 'I', 'F', 'F', '4', '0'}
-
 // Patch applies patch to old, according to the bspatch algorithm,
 // and writes the result to new.
 func Patch(old io.Reader, new io.Writer, patch io.Reader) error {
-	// File format:
-	//   0       8    "BSDIFF40"
-	//   8       8    X
-	//   16      8    Y
-	//   24      8    sizeof(newfile)
-	//   32      X    bzip2(control block)
-	//   32+X    Y    bzip2(diff block)
-	//   32+X+Y  ???  bzip2(extra block)
-	// with control block a set of triples (x,y,z) meaning "add x bytes
-	// from oldfile to x bytes from the diff block; copy y bytes from the
-	// extra block; seek forwards in oldfile by z bytes".
-
-	var header struct {
-		Magic   [8]byte
-		CtrlLen int64
-		DiffLen int64
-		NewSize int64
-	}
-	err := binary.Read(patch, signMagLittleEndian{}, &header)
+	var hdr header
+	err := binary.Read(patch, signMagLittleEndian{}, &hdr)
 	if err != nil {
 		return err
 	}
-	if header.Magic != magic {
+	if hdr.Magic != magic {
 		return ErrCorrupt
 	}
-	if header.CtrlLen < 0 || header.DiffLen < 0 || header.NewSize < 0 {
+	if hdr.CtrlLen < 0 || hdr.DiffLen < 0 || hdr.NewSize < 0 {
 		return ErrCorrupt
 	}
 
-	ctrlbuf := make([]byte, header.CtrlLen)
+	ctrlbuf := make([]byte, hdr.CtrlLen)
 	_, err = io.ReadFull(patch, ctrlbuf)
 	if err != nil {
 		return err
 	}
 	cpfbz2 := bzip2.NewReader(bytes.NewReader(ctrlbuf))
 
-	diffbuf := make([]byte, header.DiffLen)
+	diffbuf := make([]byte, hdr.DiffLen)
 	_, err = io.ReadFull(patch, diffbuf)
 	if err != nil {
 		return err
@@ -70,10 +48,10 @@ func Patch(old io.Reader, new io.Writer, patch io.Reader) error {
 		return err
 	}
 
-	nbuf := make([]byte, header.NewSize)
+	nbuf := make([]byte, hdr.NewSize)
 
 	var oldpos, newpos int64
-	for newpos < header.NewSize {
+	for newpos < hdr.NewSize {
 		var ctrl struct{ Add, Copy, Seek int64 }
 		err = binary.Read(cpfbz2, signMagLittleEndian{}, &ctrl)
 		if err != nil {
@@ -81,7 +59,7 @@ func Patch(old io.Reader, new io.Writer, patch io.Reader) error {
 		}
 
 		// Sanity-check
-		if newpos+ctrl.Add > header.NewSize {
+		if newpos+ctrl.Add > hdr.NewSize {
 			return ErrCorrupt
 		}
 
@@ -103,7 +81,7 @@ func Patch(old io.Reader, new io.Writer, patch io.Reader) error {
 		oldpos += ctrl.Add
 
 		// Sanity-check
-		if newpos+ctrl.Copy > header.NewSize {
+		if newpos+ctrl.Copy > hdr.NewSize {
 			return ErrCorrupt
 		}
 

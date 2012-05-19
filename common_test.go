@@ -2,6 +2,7 @@ package binarydist
 
 import (
 	"crypto/rand"
+	"io"
 	"io/ioutil"
 	"os"
 )
@@ -13,6 +14,14 @@ func mustOpen(path string) *os.File {
 	}
 
 	return f
+}
+
+func mustReadAll(r io.Reader) []byte {
+	b, err := ioutil.ReadAll(r)
+	if err != nil {
+		panic(err)
+	}
+	return b
 }
 
 func fileCmp(a, b *os.File) int64 {
@@ -58,7 +67,7 @@ func fileCmp(a, b *os.File) int64 {
 	return -1
 }
 
-func mustWriteRandFile(path string, size int) {
+func mustWriteRandFile(path string, size int) *os.File {
 	p := make([]byte, size)
 	_, err := rand.Read(p)
 	if err != nil {
@@ -74,4 +83,11 @@ func mustWriteRandFile(path string, size int) {
 	if err != nil {
 		panic(err)
 	}
+
+	_, err = f.Seek(0, 0)
+	if err != nil {
+		panic(err)
+	}
+
+	return f
 }
