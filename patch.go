@@ -12,7 +12,7 @@ import (
 	"io/ioutil"
 )
 
-var ErrCorrupt  = errors.New("corrupt patch")
+var ErrCorrupt = errors.New("corrupt patch")
 
 var magic = [8]byte{'B', 'S', 'D', 'I', 'F', 'F', '4', '0'}
 
@@ -32,7 +32,7 @@ func Patch(old io.Reader, new io.Writer, patch io.Reader) error {
 	// extra block; seek forwards in oldfile by z bytes".
 
 	var header struct {
-		Magic [8]byte
+		Magic   [8]byte
 		CtrlLen int64
 		DiffLen int64
 		NewSize int64
@@ -44,7 +44,7 @@ func Patch(old io.Reader, new io.Writer, patch io.Reader) error {
 	if header.Magic != magic {
 		return ErrCorrupt
 	}
-	if header.CtrlLen<0 || header.DiffLen<0 || header.NewSize<0 {
+	if header.CtrlLen < 0 || header.DiffLen < 0 || header.NewSize < 0 {
 		return ErrCorrupt
 	}
 
@@ -74,7 +74,7 @@ func Patch(old io.Reader, new io.Writer, patch io.Reader) error {
 
 	var oldpos, newpos int64
 	for newpos < header.NewSize {
-		var ctrl struct { Add, Copy, Seek int64 }
+		var ctrl struct{ Add, Copy, Seek int64 }
 		err = binary.Read(cpfbz2, binary.LittleEndian, &ctrl)
 		if err != nil {
 			return err
