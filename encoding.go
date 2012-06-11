@@ -4,17 +4,17 @@ package binarydist
 // It implements binary.ByteOrder using a sign-magnitude format
 // and little-endian byte order. Only methods Uint64 and String
 // have been written; the rest panic.
-type smle struct{}
+type signMagLittleEndian struct{}
 
-func (smle) Uint16(b []byte) uint16 { panic("unimplemented") }
+func (signMagLittleEndian) Uint16(b []byte) uint16 { panic("unimplemented") }
 
-func (smle) PutUint16(b []byte, v uint16) { panic("unimplemented") }
+func (signMagLittleEndian) PutUint16(b []byte, v uint16) { panic("unimplemented") }
 
-func (smle) Uint32(b []byte) uint32 { panic("unimplemented") }
+func (signMagLittleEndian) Uint32(b []byte) uint32 { panic("unimplemented") }
 
-func (smle) PutUint32(b []byte, v uint32) { panic("unimplemented") }
+func (signMagLittleEndian) PutUint32(b []byte, v uint32) { panic("unimplemented") }
 
-func (smle) Uint64(b []byte) uint64 {
+func (signMagLittleEndian) Uint64(b []byte) uint64 {
 	y := int64(b[0]) |
 		int64(b[1])<<8 |
 		int64(b[2])<<16 |
@@ -30,6 +30,6 @@ func (smle) Uint64(b []byte) uint64 {
 	return uint64(y)
 }
 
-func (smle) PutUint64(b []byte, v uint64) { panic("unimplemented") }
+func (signMagLittleEndian) PutUint64(b []byte, v uint64) { panic("unimplemented") }
 
-func (smle) String() string { return "smle" }
+func (signMagLittleEndian) String() string { return "signMagLittleEndian" }

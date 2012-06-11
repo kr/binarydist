@@ -37,7 +37,7 @@ func Patch(old io.Reader, new io.Writer, patch io.Reader) error {
 		DiffLen int64
 		NewSize int64
 	}
-	err := binary.Read(patch, smle{}, &header)
+	err := binary.Read(patch, signMagLittleEndian{}, &header)
 	if err != nil {
 		return err
 	}
@@ -75,7 +75,7 @@ func Patch(old io.Reader, new io.Writer, patch io.Reader) error {
 	var oldpos, newpos int64
 	for newpos < header.NewSize {
 		var ctrl struct{ Add, Copy, Seek int64 }
-		err = binary.Read(cpfbz2, smle{}, &ctrl)
+		err = binary.Read(cpfbz2, signMagLittleEndian{}, &ctrl)
 		if err != nil {
 			return err
 		}
