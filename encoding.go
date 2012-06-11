@@ -1,11 +1,9 @@
 package binarydist
 
-// SMLE is the numeric encoding used by the bsdiff tools.
+// Smle is the numeric encoding used by the bsdiff tools.
 // It implements binary.ByteOrder using a sign-magnitude format
-// and little-endian byte order. Only methods Uint64, String,
-// and GoString have been written; the rest panic.
-var SMLE smle
-
+// and little-endian byte order. Only methods Uint64 and String
+// have been written; the rest panic.
 type smle struct{}
 
 func (smle) Uint16(b []byte) uint16 { panic("unimplemented") }
@@ -34,6 +32,4 @@ func (smle) Uint64(b []byte) uint64 {
 
 func (smle) PutUint64(b []byte, v uint64) { panic("unimplemented") }
 
-func (smle) String() string { return "SMLE" }
-
-func (smle) GoString() string { return "binarydist.SMLE" }
+func (smle) String() string { return "smle" }
