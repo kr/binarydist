@@ -1,6 +1,6 @@
 package binarydist
 
-// Smle is the numeric encoding used by the bsdiff tools.
+// SignMagLittleEndian is the numeric encoding used by the bsdiff tools.
 // It implements binary.ByteOrder using a sign-magnitude format
 // and little-endian byte order. Only methods Uint64 and String
 // have been written; the rest panic.
