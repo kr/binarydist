@@ -1,9 +1,9 @@
 package binarydist
 
 import (
-	"crypto/rand"
 	"io"
 	"io/ioutil"
+	"math/rand"
 	"os"
 )
 
@@ -67,8 +67,9 @@ func fileCmp(a, b *os.File) int64 {
 	return -1
 }
 
-func mustWriteRandFile(path string, size int) *os.File {
+func mustWriteRandFile(path string, size int, seed int64) *os.File {
 	p := make([]byte, size)
+	rand.Seed(seed)
 	_, err := rand.Read(p)
 	if err != nil {
 		panic(err)
