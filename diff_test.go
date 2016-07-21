@@ -13,8 +13,8 @@ var diffT = []struct {
 	new *os.File
 }{
 	{
-		old: mustWriteRandFile("test.old", 1e3),
-		new: mustWriteRandFile("test.new", 1e3),
+		old: mustWriteRandFile("test.old", 1e3, 1),
+		new: mustWriteRandFile("test.new", 1e3, 2),
 	},
 	{
 		old: mustOpen("testdata/sample.old"),
