@@ -2,27 +2,30 @@ package binarydist
 
 import (
 	"bytes"
+	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"testing"
 )
 
-var diffT = []struct {
-	old *os.File
-	new *os.File
-}{
-	{
-		old: mustWriteRandFile("test.old", 1e3, 1),
-		new: mustWriteRandFile("test.new", 1e3, 2),
-	},
-	{
-		old: mustOpen("testdata/sample.old"),
-		new: mustOpen("testdata/sample.new"),
-	},
-}
+func testFunc(t *testing.T, fDiff func(old, new io.Reader, patch io.Writer) error) {
+	t.Helper()
 
-func TestDiff(t *testing.T) {
+	diffT := []struct {
+		old *os.File
+		new *os.File
+	}{
+		{
+			old: mustWriteRandFile("test.old", 1e3, 1),
+			new: mustWriteRandFile("test.new", 1e3, 2),
+		},
+		{
+			old: mustOpen("testdata/sample.old"),
+			new: mustOpen("testdata/sample.new"),
+		},
+	}
+
 	for _, s := range diffT {
 		got, err := ioutil.TempFile("/tmp", "bspatch.")
 		if err != nil {
@@ -43,7 +46,7 @@ func TestDiff(t *testing.T) {
 			panic(err)
 		}
 
-		err = Diff(s.old, s.new, got)
+		err = fDiff(s.old, s.new, got)
 		if err != nil {
 			t.Fatal("err", err)
 		}
@@ -64,4 +67,20 @@ func TestDiff(t *testing.T) {
 			t.Logf("produced different output at pos %d; %d != %d", i, gotBuf[i], expBuf[i])
 		}
 	}
+}
+
+func TestDiff(t *testing.T) {
+	testFunc(t, Diff)
+}
+
+func TestDiffWithSuf(t *testing.T) {
+	fDiff := func(old, new io.Reader, patch io.Writer) error {
+		oldSufStruct, err := ComputeSuf(old)
+		if err != nil {
+			return err
+		}
+
+		return DiffWithSuf(oldSufStruct, new, patch)
+	}
+	testFunc(t, fDiff)
 }
