@@ -191,7 +191,7 @@ func Diff(old, new io.Reader, patch io.Writer) error {
 		return err
 	}
 
-	pbuf, err := diffBytes(obuf, nbuf)
+	pbuf, err := diffBytes(nil, obuf, nbuf)
 	if err != nil {
 		return err
 	}
@@ -200,18 +200,56 @@ func Diff(old, new io.Reader, patch io.Writer) error {
 	return err
 }
 
-func diffBytes(obuf, nbuf []byte) ([]byte, error) {
+// BufSufData contains a buffer and its corresponding suffix array.
+type BufSufData struct {
+	Buf []byte
+	Suf []int
+}
+
+// ComputeSuf computes a BufSufData from reader using qsufsort algorithm.
+func ComputeSuf(reader io.Reader) (*BufSufData, error) {
+	buf, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return nil, err
+	}
+	return &BufSufData{
+		Buf: buf,
+		Suf: qsufsort(buf),
+	}, nil
+}
+
+// DiffWithSuf does the same operations as Diff with the exception that
+// it optionally takes obufsuf (*BufSufData of old io.Reader) to avoid
+// recreating the suffix array.
+func DiffWithSuf(obufsuf *BufSufData, new io.Reader, patch io.Writer) error {
+	nbuf, err := ioutil.ReadAll(new)
+	if err != nil {
+		return err
+	}
+
+	pbuf, err := diffBytes(obufsuf.Suf, obufsuf.Buf, nbuf)
+	if err != nil {
+		return err
+	}
+
+	_, err = patch.Write(pbuf)
+	return err
+}
+
+func diffBytes(I []int, obuf, nbuf []byte) ([]byte, error) {
 	var patch seekBuffer
-	err := diff(obuf, nbuf, &patch)
+	err := diff(I, obuf, nbuf, &patch)
 	if err != nil {
 		return nil, err
 	}
 	return patch.buf, nil
 }
 
-func diff(obuf, nbuf []byte, patch io.WriteSeeker) error {
+func diff(I []int, obuf, nbuf []byte, patch io.WriteSeeker) error {
 	var lenf int
-	I := qsufsort(obuf)
+	if I == nil {
+		I = qsufsort(obuf)
+	}
 	db := make([]byte, len(nbuf))
 	eb := make([]byte, len(nbuf))
 	var dblen, eblen int
